@@ -1,0 +1,7 @@
+{
+  "name": "carousel-ai-maker",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  }
+}

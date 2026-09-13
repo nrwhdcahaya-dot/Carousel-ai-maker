@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="id"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111827"><title>Carousel AI Maker</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f4f6;color:#111827;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+header{background:#111827;color:#fff;padding:15px 16px;position:sticky;top:0;z-index:5}header b{font-size:18px}
+main{max-width:760px;margin:auto;padding:12px}.card{background:#fff;border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 3px 15px #0000000d}
+label{font-size:12px;font-weight:800;color:#4b5563;display:block;margin:0 0 6px}
+input,textarea,select{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:12px;font:inherit}textarea{min-height:90px}
+button{width:100%;border:0;border-radius:12px;padding:12px;font-weight:800;cursor:pointer;margin-top:8px}.primary{background:#111827;color:#fff}.violet{background:#7c3aed;color:#fff}
+.preview{display:flex;justify-content:center;background:#eef2ff;border-radius:15px;padding:10px}.slide{width:min(100%,430px);aspect-ratio:4/5;border-radius:14px;overflow:hidden;position:relative;background:linear-gradient(145deg,#312e81,#111827);color:#fff;padding:25px;display:flex;flex-direction:column;justify-content:space-between}.slide img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45}.shade{position:absolute;inset:0;background:linear-gradient(#0002,#000b)}.inside{position:relative;z-index:2}.badge{font-size:11px;font-weight:800;border:1px solid #ffffff55;background:#ffffff22;padding:6px 9px;border-radius:999px;display:inline-block}.slide h2{font-size:30px;line-height:1.05;margin:14px 0}.slide p{line-height:1.45}.thumbs{display:flex;gap:7px;overflow:auto}.thumb{min-width:82px;height:100px;padding:5px;background:#e5e7eb;border:2px solid transparent;border-radius:10px}.thumb.active{border-color:#7c3aed}.thumb img{width:100%;height:60px;object-fit:cover;border-radius:6px}.status{font-size:12px;color:#6b7280;min-height:18px;margin-top:7px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}@media(max-width:420px){.grid{grid-template-columns:1fr}}
+</style></head><body>
+<header><b>✨ Carousel AI Maker</b></header><main>
+<div class="card"><label>TOPIK</label><input id="topic" placeholder="Contoh: Cara jualan pisang kembung dari rumah">
+<div class="grid" style="margin-top:8px"><div><label>Gaya</label><select id="style"><option>Edukasi</option><option>Promosi</option><option>Storytelling</option><option>Tips Praktis</option></select></div><div><label>Visual</label><select id="visual"><option>Foto produk realistis</option><option>Lifestyle</option><option>Ilustrasi modern</option><option>Minimal studio</option></select></div></div>
+<button class="primary" onclick="makeSlides()">✨ Buat 7 Slide</button></div>
+<div class="card"><label>EDIT SLIDE</label><input id="title" placeholder="Judul"><textarea id="body" placeholder="Isi"></textarea><button onclick="save()">Simpan Perubahan</button><button class="violet" onclick="generateImage()">🖼️ Generate Gambar AI</button><div id="status" class="status"></div></div>
+<div class="card"><label>PREVIEW</label><div class="preview"><div id="canvas" class="slide"><img id="img"><div class="shade"></div><div class="inside"><span id="badge" class="badge">SLIDE 1</span><h2 id="pt">Judul</h2><p id="pb">Isi slide</p></div><div class="inside" id="pn">1 / 7</div></div></div></div>
+<div class="card"><label>SEMUA SLIDE</label><div id="thumbs" class="thumbs"></div><button class="violet" onclick="generateAll()">✨ Generate Semua Gambar AI</button><button onclick="window.print()">🖨️ Cetak / Simpan PDF</button></div>
+</main>
+<script>
+let slides=[],cur=0;
+const $=x=>document.getElementById(x);
+function render(){if(!slides.length)return;let s=slides[cur];$('title').value=s.title;$('body').value=s.body;$('pt').textContent=s.title;$('pb').textContent=s.body;$('badge').textContent=s.badge;$('pn').textContent=`${cur+1} / ${slides.length}`;if(s.image){$('img').src=s.image;$('img').style.display='block'}else{$('img').style.display='none'}
+$('thumbs').innerHTML=slides.map((x,i)=>`<button class="thumb ${i==cur?'active':''}" onclick="cur=${i};render()">${x.image?`<img src="${x.image}">`:''}<div>${i+1}. ${x.title.slice(0,18)}</div></button>`).join('')}
+function save(){slides[cur].title=$('title').value;slides[cur].body=$('body').value;render();$('status').textContent='Perubahan tersimpan.'}
+function makeSlides(){let t=$('topic').value||'Tips jualan dari rumah';slides=[
+['Hook',`Kamu ingin ${t.toLowerCase()}? Ini cara sederhana untuk memulainya.`],
+['Langkah 1','Tentukan target pembeli dan masalah yang ingin kamu bantu selesaikan.'],
+['Langkah 2','Siapkan produk atau penawaran yang sederhana dan mudah dipahami.'],
+['Langkah 3','Mulai dari lingkungan sekitar dan manfaatkan WhatsApp untuk promosi.'],
+['Langkah 4','Gunakan foto yang menarik dan tulis manfaat produk dengan jelas.'],
+['Hindari Kesalahan','Jangan menunggu semuanya sempurna. Mulai kecil, ukur respons, lalu perbaiki.'],
+['CTA','Simpan postingan ini dan mulai praktik hari ini!']
+].map((a,i)=>({title:a[0],body:a[1],badge:i?'SLIDE '+(i+1):'HOOK',image:null}));cur=0;render()}
+async function generateImage(){let s=slides[cur];$('status').textContent='Sedang membuat gambar AI...';try{let r=await fetch('/api/generate-image',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:s.title,body:s.body,visual:$('visual').value})});let d=await r.json();if(!r.ok)throw Error(d.error||'Gagal');s.image=d.image;render();$('status').textContent='Gambar AI berhasil dibuat.'}catch(e){$('status').textContent=e.message}}
+async function generateAll(){for(let i=0;i<slides.length;i++){cur=i;render();await generateImage()}alert('Semua gambar selesai dibuat.')}
+makeSlides();
+</script></body></html>
